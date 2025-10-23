@@ -1,0 +1,165 @@
+{% extends 'scheduler/base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Create Schedule{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Create a New Schedule</h2>
+    <form method="post" enctype="multipart/form-data" id="scheduleForm" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Render fields manually for better control -->
+        {% for field in form %}
+            {% if field.name != 'ai_edit_prompt' and field.name != 'final_caption' and field.name != 'media_files' %} {# Sembunyikan field yang dikontrol JS #}
+                <div id="div_{{ field.auto_id }}" class="field-wrapper">
+                    <label for="{{ field.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
+                    
+                    {% if field.name == 'platform' %}
+                        <div class="mt-2 space-y-2">
+                        {% for choice in field %}
+                            <div class="flex items-center">
+                                {{ choice.tag }}
+                                <label for="{{ choice.id_for_label }}" class="ml-2 block text-sm text-gray-900">{{ choice.choice_label }}</label>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% elif field.field.widget.input_type == 'checkbox' %}
+                        <div class="flex items-center">
+                            {{ field }}
+                            <label for="{{ field.auto_id }}" class="ml-2 block text-sm text-gray-900">{{ field.label_tag }}</label>
+                        </div>
+                    {% else %}
+                        {% render_field field class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %}
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <p class="mt-1 text-sm text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Media Files Input (dikontrol JS) -->
+        <div id="div_id_media_files">
+            <label for="{{ form.media_files.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ form.media_files.label }}</label>
+            {% render_field form.media_files id="id_media_files_input" class="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" %}
+            {% for error in form.media_files.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}
+        </div>
+
+
+        <!-- AI Edit Prompt (ditempatkan di sini untuk dikontrol JS) -->
+        <div id="div_id_ai_edit_prompt" style="display: none;">
+            <label for="{{ form.ai_edit_prompt.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ form.ai_edit_prompt.label }}</label>
+            {% render_field form.ai_edit_prompt class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" %}
+        </div>
+
+        <!-- Manual Caption (ditempatkan di sini untuk dikontrol JS) -->
+        <div id="div_id_final_caption" style="display: none;">
+            <label for="{{ form.final_caption.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">Manual Caption</label>
+            {% render_field form.final_caption class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Tulis caption Anda di sini..." %}
+        </div>
+
+        <div>
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Create Schedule</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mediaTypeField = document.getElementById('id_media_type');
+        const contentTypeDiv = document.getElementById('div_id_content_type');
+        const contentTypeField = document.getElementById('id_content_type');
+        const needsAiEditField = document.getElementById('id_needs_ai_edit');
+        const aiEditPromptDiv = document.getElementById('div_id_ai_edit_prompt');
+        const needsAiCaptionField = document.getElementById('id_needs_ai_caption');
+        const manualCaptionDiv = document.getElementById('div_id_final_caption');
+        const mediaFilesInput = document.getElementById('id_media_files_input');
+
+        // Opsi untuk setiap Media Type
+        const contentTypeOptions = {
+            'image': [
+                { value: 'STORIES', text: 'Stories' },
+                { value: 'SINGLE_POST', text: 'Single Post' },
+                { value: 'CAROUSEL_POST', text: 'Carousel Post' }
+            ],
+            'video': [
+                { value: 'STORIES', text: 'Stories' },
+                { value: 'REELS', text: 'Reels' },
+                { value: 'TIKTOK_VIDEO', text: 'TikTok Video' }
+            ]
+        };
+
+        function updateContentTypeOptions() {
+            const mediaType = mediaTypeField.value;
+            let optionsToShow = [];
+
+            if (mediaType === 'SINGLE_IMAGE' || mediaType === 'CAROUSEL') {
+                optionsToShow = contentTypeOptions.image;
+            } else if (mediaType === 'VIDEO') {
+                optionsToShow = contentTypeOptions.video;
+            }
+
+            // Hapus opsi lama
+            contentTypeField.innerHTML = '<option value="">---------</option>';
+
+            // Tambah opsi baru
+            if (optionsToShow.length > 0) {
+                optionsToShow.forEach(opt => {
+                    const option = new Option(opt.text, opt.value);
+                    contentTypeField.add(option);
+                });
+                contentTypeDiv.style.display = 'block';
+            } else {
+                contentTypeDiv.style.display = 'none';
+            }
+        }
+
+        function updateFileInput() {
+            const mediaType = mediaTypeField.value;
+
+            if (mediaType === 'SINGLE_IMAGE') {
+                mediaFilesInput.removeAttribute('multiple');
+                mediaFilesInput.setAttribute('accept', 'image/*');
+            } else if (mediaType === 'CAROUSEL') {
+                mediaFilesInput.setAttribute('multiple', 'true');
+                mediaFilesInput.setAttribute('accept', 'image/*');
+            } else if (mediaType === 'VIDEO') {
+                mediaFilesInput.removeAttribute('multiple');
+                mediaFilesInput.setAttribute('accept', 'video/*');
+            } else {
+                mediaFilesInput.removeAttribute('multiple');
+                mediaFilesInput.removeAttribute('accept');
+            }
+        }
+
+        function toggleAiEditPrompt() {
+            // Logika baru: hanya bergantung pada checkbox
+            aiEditPromptDiv.style.display = needsAiEditField.checked ? 'block' : 'none';
+        }
+
+        function toggleManualCaption() {
+            // Tampilkan manual caption HANYA JIKA AI caption TIDAK dicentang
+            manualCaptionDiv.style.display = needsAiCaptionField.checked ? 'none' : 'block';
+        }
+
+        // Initial check on page load
+        updateContentTypeOptions();
+        updateFileInput();
+        toggleAiEditPrompt();
+        toggleManualCaption();
+
+        // Add event listeners
+        mediaTypeField.addEventListener('change', updateContentTypeOptions);
+        mediaTypeField.addEventListener('change', updateFileInput);
+        needsAiEditField.addEventListener('change', toggleAiEditPrompt);
+        needsAiCaptionField.addEventListener('change', toggleManualCaption);
+    });
+</script>
+{% endblock %}

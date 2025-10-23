@@ -1,0 +1,10 @@
+Django>=4.2,<5.0
+openai
+django-widget-tweaks
+python-decouple
+psycopg2-binary
+celery
+redis
+gunicorn
+dj-database-url
+upload-post
