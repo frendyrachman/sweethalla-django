@@ -25,7 +25,7 @@ UPLOAD_POST_API_KEY = settings.UPLOAD_POST_API_KEY
 # Mockup API Functions
 def ai_edit_content(media_file_path, prompt, api_key):
     """
-    Calls the OpenAI DALL-E 2 API to edit an image based on a prompt,
+    Calls the OpenAI gpt-image-1 API to edit an image based on a prompt,
     saves the result to a new file, and returns the new file's path.
     """
     logger.info(f"Memulai proses edit AI untuk file {os.path.basename(media_file_path)}...")
@@ -34,7 +34,7 @@ def ai_edit_content(media_file_path, prompt, api_key):
         
         with open(media_file_path, "rb") as image_file:
             result = client.images.edit(
-                model="dall-e-2",
+                model="gpt-image-1",
                 image=image_file,
                 prompt=prompt,
                 response_format="b64_json"
@@ -58,8 +58,14 @@ def ai_edit_content(media_file_path, prompt, api_key):
         logger.error(f"Gagal melakukan edit AI. Detail: {e}", exc_info=True)
         return None # Return None to indicate failure
 
-def call_upload_post_api_schedule(schedule_data, api_key):
-    """Mocks API call to Upload-Post.com for scheduling."""
+def call_upload_post_api_schedule(image_path, schedule_data, api_key):
+    # client = UploadPostClient(UPLOAD_POST_API_KEY)
+    # response = client.upload_video(
+    #     video_path="/path/to/video.mp4",
+    #     title="My Awesome Video",
+    #     user="testuser",
+    #     platforms=["tiktok", "instagram"]
+    # )
     logger.info(f"Simulasi: Penjadwalan konten ke {schedule_data['platform']}...")
     job_id = "mock_job_" + str(int(time.time()))
     logger.info(f"Simulasi sukses. Job ID diterima: {job_id}")
