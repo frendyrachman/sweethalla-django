@@ -1,6 +1,7 @@
 Django>=4.2,<5.0
 openai
 django-widget-tweaks
+pydantic
 python-decouple
 psycopg2-binary
 celery

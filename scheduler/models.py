@@ -59,3 +59,15 @@ class MediaAsset(models.Model):
         if self.file and os.path.isfile(self.file.path):
             os.remove(self.file.path)
         super().delete(*args, **kwargs)
+
+
+class ApiScheduleLog(models.Model):
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='api_logs')
+    job_id = models.CharField(max_length=255)
+    schedule_time = models.DateTimeField()
+    platform = models.CharField(max_length=10)
+    status = models.CharField(max_length=20, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Log for Job ID: {self.job_id}"
