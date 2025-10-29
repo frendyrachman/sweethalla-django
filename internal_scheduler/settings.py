@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-tdp-yu@)92cmgmen)v5ctw1wdhtk+@y_42#abzvve2vh1zx^_4'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -127,14 +128,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Auth
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = 'scheduler:login' # Menggunakan namespacing
+LOGIN_REDIRECT_URL = '/app/' # Mengarahkan ke halaman utama admin/ops setelah login
+LOGOUT_REDIRECT_URL = 'scheduler:landing_page' # Mengarahkan ke landing page setelah logout
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # API Keys from Environment Variables
-UPLOAD_POST_API_KEY = os.getenv("UPLOAD_POST_API_KEY", "YOUR_UPLOAD_POST_KEY")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "YOUR_OPENAI_KEY")
+UPLOAD_POST_API_KEY = config("UPLOAD_POST_API_KEY", default="YOUR_UPLOAD_POST_KEY")
+OPENAI_API_KEY = config("OPENAI_API_KEY")

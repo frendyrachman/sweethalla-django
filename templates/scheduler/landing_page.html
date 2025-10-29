@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SWEETHALLA — Cinematic Travel Photo & Video</title>
+  <meta name="description" content="SWEETHALLA: cinematic photography & videography for travel, weddings, brands. Based in Saudi Arabia — book your shoot now." />
+  <meta property="og:title" content="SWEETHALLA — Cinematic Travel Photo & Video" />
+  <meta property="og:description" content="Cinematic photo & video for moments you can’t move on from." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <style>
+    /* Mobile-first styles */
+    :root {
+      --bg: #fffaf2;
+      --ink: #111;
+      --muted: #6b6b6b;
+      --brand: #111;
+      --accent: #ffedd5;
+      --stroke: #1b1b1b;
+      --pill: #111;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    .container { width: 100%; max-width: 480px; margin: 0 auto; padding: 16px; }
+    .nav { position: sticky; top: 0; background: rgba(255,250,242,.85); backdrop-filter: saturate(180%) blur(8px); border-bottom: 1px solid #eae0d5; z-index: 10; }
+    .nav-inner { max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo svg { width: 34px; height: 34px; }
+    .wordmark { font-variant-ligatures: none; font-weight: 700; letter-spacing: .4px; }
+    .lang { font-size: 12px; color: var(--muted); border: 1px solid #e7dac9; border-radius: 999px; padding: 6px 10px; }
+    .hero { padding: 28px 16px 18px; text-align: center; }
+    .eyebrow { display: inline-block; padding: 6px 10px; background: var(--accent); border: 1px solid #e7dac9; border-radius: 999px; font-size: 12px; letter-spacing: .3px; }
+    h1 { font-size: 28px; line-height: 1.15; margin: 14px 0 8px; font-weight: 800; }
+    .sub { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+    .cta-row { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0 6px; }
+    .btn { padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--stroke); background: var(--pill); color: #fff; font-weight: 700; }
+    .btn.secondary { background: transparent; color: var(--ink); }
+    .tagline { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    /* portfolio strip */
+    .strip { display: grid; grid-auto-flow: column; grid-auto-columns: 80%; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 16px 2px; }
+    .card { scroll-snap-align: start; background: #fff; border: 1px solid #eadfce; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(17,17,17,.06); }
+    .card img { aspect-ratio: 4 / 5; object-fit: cover; width: 100%; }
+    .card .cap { padding: 10px 12px 14px; font-size: 13px; display: flex; align-items: center; justify-content: space-between;}
+    .chip { font-size: 11px; padding: 4px 8px; border: 1px solid #eadfce; border-radius: 999px; color: #444; }
+    /* services */
+    .section { padding: 18px 16px; }
+    .section h2 { font-size: 18px; margin: 0 0 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    .tile { border: 1px solid #eadfce; border-radius: 14px; padding: 14px; background: #fff; }
+    .tile h3 { margin: 0 0 6px; font-size: 15px; }
+    .tile p { margin: 0; font-size: 12px; color: var(--muted); }
+    /* testimonial */
+    .quote { border-left: 3px solid #222; padding: 4px 0 4px 12px; margin-top: 8px; font-size: 13px; }
+    .person { display:flex; align-items:center; gap:10px; margin-top:10px; }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background:#ddd; border: 1px solid #c9c9c9; }
+    /* footer */
+    .footer { padding: 80px 16px 32px; text-align: center; }
+    .footer small { color: var(--muted); display:block; margin-top:8px; }
+    .sticky-cta { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px env(safe-area-inset-bottom); background: rgba(255,250,242,.92); border-top: 1px solid #eadfce; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .whatsapp { background: #25d366; border: none; color: #fff; font-weight: 800; border-radius: 12px; padding: 14px 16px; }
+    .outline { background: transparent; border: 1.5px solid var(--stroke); color: var(--ink); font-weight: 800; border-radius: 12px; padding: 14px 16px; }
+    /* larger mobile / tablet */
+    @media (min-width: 420px){
+      .strip { grid-auto-columns: 55%; }
+      h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="logo">
+        <!-- Simple inline SVG logo (camera + play + spark) -->
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <g fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="16" width="52" height="36" rx="8" ry="8"></rect>
+            <circle cx="32" cy="34" r="11"></circle>
+            <polygon points="29,28 41,34 29,40" fill="black"></polygon>
+            <path d="M16 16 l6 -6 h10" />
+            <path d="M55 10 l2 4 l4 2 l-4 2 l-2 4 l-2 -4 l-4 -2 l4 -2 z" fill="black"/>
+          </g>
+        </svg>
+        <strong class="wordmark">SWEETHALLA</strong>
+      </div>
+      <div class="lang" id="lang">EN / عربي / ID</div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero container">
+    <span class="eyebrow">Saudi • Riyadh • Jeddah</span>
+    <h1>Cinematic photo & video for moments you can’t move on from.</h1>
+    <p class="sub">Travel content, weddings, brands, and private trips — crafted with a sweet touch and legendary feel.</p>
+    <div class="cta-row">
+      <a class="btn" href="#book">Book a Shoot</a>
+      <a class="btn secondary" href="#portfolio">See Portfolio</a>
+    </div>
+    <p class="tagline">Avg. delivery 5–7 days • RAW on request • Arabic/English/Bahasa</p>
+  </header>
+
+  <!-- PORTFOLIO STRIP -->
+  <section id="portfolio" class="section">
+    <div class="container">
+      <h2>Latest Work</h2>
+    </div>
+    <div class="strip" aria-label="Portfolio previews">
+      <article class="card">
+        <img alt="Desert couple shoot" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='600' height='750'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23fef3c7'/><stop offset='100%' stop-color='%23fde68a'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23222' font-family='Arial' font-size='28'>Desert Couple</text></svg>" />
+        <div class="cap"><span>Al Ula</span><span class="chip">Photo</span></div>
+      </article>
+      <article class="card">
+        <img alt="Night city reel" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='600' height='750'><defs><linearGradient id='g2' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23dbeafe'/><stop offset='100%' stop-color='%2393c5fd'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g2)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%230b0b0b' font-family='Arial' font-size='28'>Riyadh Night Reel</text></svg>" />
+        <div class="cap"><span>Riyadh</span><span class="chip">Reel</span></div>
+      </article>
+      <article class="card">
+        <img alt="Pilgrim story" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='600' height='750'><defs><linearGradient id='g3' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23e9d5ff'/><stop offset='100%' stop-color='%23c4b5fd'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g3)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23111' font-family='Arial' font-size='28'>Makkah Portrait</text></svg>" />
+        <div class="cap"><span>Makkah</span><span class="chip">Portrait</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section">
+    <div class="container">
+      <h2>Services</h2>
+      <div class="grid">
+        <div class="tile">
+          <h3>Travel & Lifestyle</h3>
+          <p>Short reels & photo sets for creators and families on vacation.</p>
+        </div>
+        <div class="tile">
+          <h3>Weddings & Nikah</h3>
+          <p>Full coverage with cinematic color & gentle storytelling.</p>
+        </div>
+        <div class="tile">
+          <h3>Brand Shoots</h3>
+          <p>Product, hospitality, and event content that converts.</p>
+        </div>
+        <div class="tile">
+          <h3>Private Trip by WT</h3>
+          <p>Bundle with WishTravelers for itinerary + content team.</p>
+        </div>
+      </div>
+      <div class="quote">
+        “Looks like a movie. We still can’t move on.”
+        <div class="person">
+          <div class="avatar"></div>
+          <div><strong>Nour & Faisal</strong><br/><span style="color:#6b6b6b; font-size:12px">Jeddah Waterfront</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING -->
+  <section id="book" class="section">
+    <div class="container">
+      <h2>Book a Shoot</h2>
+      <div class="grid">
+        <div class="tile">
+          <h3>Starter Session</h3>
+          <p>45–60 mins • 20 edited photos • 1 reel (30s)</p>
+        </div>
+        <div class="tile">
+          <h3>Signature</h3>
+          <p>2–3 hours • 50 edited photos • 3 reels (30–45s)</p>
+        </div>
+        <div class="tile">
+          <h3>Premium Day</h3>
+          <p>Half day • 100+ photos • 5 reels • creative director</p>
+        </div>
+      </div>
+      <div class="cta-row" style="margin-top:14px">
+        <a class="btn" href="https://wa.me/6281299999999" target="_blank" rel="noopener">WhatsApp Us</a>
+        <a class="btn secondary" href="mailto:booking@sweethalla.com">Email</a>
+      </div>
+      <p class="tagline">Serving: Riyadh • Jeddah • Makkah • Al Ula • Medina</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container" style="text-align:center">
+      <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:6px">
+        <svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true">
+          <g fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="16" width="52" height="36" rx="8" ry="8"></rect>
+            <circle cx="32" cy="34" r="11"></circle>
+            <polygon points="29,28 41,34 29,40" fill="black"></polygon>
+          </g>
+        </svg>
+        <strong>SWEETHALLA</strong>
+      </div>
+      <small>© 2025 SWEETHALLA. A WishTravelers production.</small>
+    </div>
+  </footer>
+
+  <!-- STICKY CTA -->
+  <div class="sticky-cta">
+    <button class="whatsapp" onclick="window.open('https://wa.me/6281299999999','_blank')">WhatsApp</button>
+    <a class="outline" href="#book" role="button" aria-label="Check packages">Packages</a>
+  </div>
+
+</body>
+</html>

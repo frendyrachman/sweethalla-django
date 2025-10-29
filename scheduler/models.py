@@ -24,13 +24,20 @@ class Schedule(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     platform = models.CharField(max_length=10, choices=PLATFORM_CHOICES)
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPE_CHOICES)
-    # Field baru ditambahkan di sini
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPE_CHOICES, blank=True, null=True)
     schedule_time = models.DateTimeField()
     needs_ai_edit = models.BooleanField(default=False)
     ai_edit_prompt = models.TextField(blank=True, null=True)
     needs_ai_caption = models.BooleanField(default=False)
-    final_caption = models.TextField(blank=True, null=True)
+    
+    # Content Fields
+    caption = models.TextField(blank=True, null=True) # Renamed from final_caption
+    ai_generated_caption = models.TextField(blank=True, null=True) # New field
+    status = models.CharField(max_length=20, choices=[
+        ('PENDING_APPROVAL', 'Pending Preview'), # Mengganti label agar lebih jelas
+        ('CONFIRMED', 'Confirmed & Processing'),
+        ('SCHEDULED', 'Scheduled'),
+    ], default='PENDING_APPROVAL')
     upload_job_id = models.CharField(max_length=255, blank=True, null=True)
     is_uploaded = models.BooleanField(default=False)
 
@@ -46,6 +53,7 @@ class MediaAsset(models.Model):
     """Model untuk menyimpan setiap file media yang terkait dengan sebuah jadwal."""
     schedule = models.ForeignKey(Schedule, related_name='media_assets', on_delete=models.CASCADE)
     file = models.FileField(upload_to='media/')
+    edited_file = models.FileField(upload_to='media/edited/', blank=True, null=True) # Untuk menyimpan hasil AI edit
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -58,6 +66,8 @@ class MediaAsset(models.Model):
         # Hapus file fisik saat objek MediaAsset dihapus
         if self.file and os.path.isfile(self.file.path):
             os.remove(self.file.path)
+        if self.edited_file and os.path.isfile(self.edited_file.path):
+            os.remove(self.edited_file.path)
         super().delete(*args, **kwargs)
 
 

@@ -13,20 +13,21 @@ class ScheduleForm(forms.ModelForm):
     class Meta:
         model = Schedule
         fields = [
-            'platform', 'media_type', 'content_type', 'schedule_time',
-            'needs_ai_edit', 'ai_edit_prompt', 'needs_ai_caption', 'final_caption'
+            'platform', 'media_type', 'content_type', 'schedule_time', 'needs_ai_edit',
+            'ai_edit_prompt', 'needs_ai_caption', 'caption'
         ]
         widgets = {
             'schedule_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'ai_edit_prompt': forms.Textarea(attrs={'rows': 3}),
-            'final_caption': forms.Textarea(attrs={'rows': 5}),
+            'caption': forms.Textarea(attrs={'rows': 5}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['ai_edit_prompt'].required = False
         self.fields['content_type'].required = False # Opsional, tergantung logika bisnis
-        self.fields['final_caption'].required = False
+        self.fields['caption'].required = False
+        self.fields['caption'].label = "Manual Caption"
 
     def clean_platform(self):
         """

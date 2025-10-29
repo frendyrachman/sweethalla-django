@@ -6,7 +6,7 @@
 <div class="bg-white p-8 rounded-lg shadow-md">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900">My Schedules</h2>
-        <a href="{% url 'create_schedule' %}" class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">+ New Schedule</a>
+        <a href="{% url 'scheduler:create_schedule' %}" class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-700">+ New Schedule</a>
     </div>
 
     <div class="overflow-x-auto">
@@ -37,12 +37,12 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             {% if schedule.is_uploaded %}
-                                <form action="{% url 'delete_schedule' schedule.id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this schedule?');">
+                                <form action="{% url 'scheduler:delete_schedule' schedule.id %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this schedule?');">
                                     {% csrf_token %}
                                     <button type="submit" class="text-red-600 hover:text-red-900">Cancel</button>
                                 </form>
                             {% else %}
-                                <form action="{% url 'delete_schedule' schedule.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this draft?');">
+                                <form action="{% url 'scheduler:delete_schedule' schedule.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this draft?');">
                                     {% csrf_token %}
                                     <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
                                 </form>
