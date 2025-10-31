@@ -2,8 +2,8 @@ from django import forms
 from .models import Schedule
 
 PLATFORM_CHOICES_FOR_FORM = [
-    ('IG', 'Instagram'),
-    ('TIKTOK', 'TikTok'),
+    ('instagram', 'Instagram'),
+    ('tiktok', 'TikTok'),
 ]
 
 class ScheduleForm(forms.ModelForm):
@@ -13,7 +13,7 @@ class ScheduleForm(forms.ModelForm):
     class Meta:
         model = Schedule
         fields = [
-            'platform', 'media_type', 'content_type', 'schedule_time', 'needs_ai_edit',
+            'platform', 'media_type', 'content_type', 'schedule_time', 'needs_ai_edit', 'media_files',
             'ai_edit_prompt', 'needs_ai_caption', 'caption'
         ]
         widgets = {

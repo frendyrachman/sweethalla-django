@@ -47,10 +47,12 @@ def create_schedule(request):
             for i, f in enumerate(files):
                 MediaAsset.objects.create(schedule=schedule, file=f, order=i)
 
-            if schedule.needs_ai_caption or schedule.needs_ai_edit:
-                return redirect('scheduler:ai_preview', schedule_id=schedule.id)
+            # Jika ada tugas AI, arahkan ke view pemrosesan AI dulu
+            if schedule.needs_ai_edit or schedule.needs_ai_caption:
+                return redirect('scheduler:run_ai_and_confirm', schedule_id=schedule.id)
             else:
-                return redirect('scheduler:schedule_preview', schedule_id=schedule.id)
+                # Jika tidak, langsung ke halaman konfirmasi
+                return redirect('scheduler:schedule_confirmation', schedule_id=schedule.id)
     else:
         form = ScheduleForm()
     return render(request, 'scheduler/schedule_form.html', {'form': form})
@@ -75,58 +77,80 @@ def home(request):
     return redirect('scheduler:login')
 
 @login_required
-def schedule_preview(request, schedule_id):
+def run_ai_and_confirm(request, schedule_id):
+    """
+    Menjalankan tugas AI yang diperlukan, menyimpan hasilnya ke session,
+    dan kemudian mengarahkan ke halaman konfirmasi.
+    """
     schedule = get_object_or_404(Schedule, id=schedule_id, user=request.user)
-    return render(request, 'scheduler/schedule_preview.html', {'schedule': schedule})
+
+    # Jalankan tugas AI
+    ai_results = run_ai_tasks_for_schedule(schedule)
+
+    # Simpan hasil AI ke session untuk digunakan di halaman konfirmasi dan saat proses
+    request.session['ai_results'] = ai_results
+    
+    # Arahkan ke halaman konfirmasi untuk ditampilkan ke pengguna
+    return redirect('scheduler:schedule_confirmation', schedule_id=schedule.id)
 
 @login_required
-def ai_preview(request, schedule_id):
+def schedule_confirmation(request, schedule_id):
+    """
+    Hanya menampilkan halaman konfirmasi dengan data dari schedule dan session.
+    """
     schedule = get_object_or_404(Schedule, id=schedule_id, user=request.user)
-    ai_results = run_ai_tasks_for_schedule(schedule) # Ini sekarang mengembalikan dictionary
+    ai_results = request.session.get('ai_results', {})
 
-    # Simpan hasil AI ke model SEBELUM me-render template
+    # Atur atribut sementara pada objek schedule untuk pratinjau di template
     schedule.ai_generated_caption = ai_results.get('ai_generated_caption')
+    edited_media_path = ai_results.get('edited_media_url')
     
-    edited_media_path = ai_results.get('edited_media_url') # Ini sekarang berisi path file
-    primary_asset = schedule.get_primary_media_asset()
-    if edited_media_path and primary_asset:
-        # Tetapkan path file yang diedit ke field FileField
-        primary_asset.edited_file.name = edited_media_path
-        primary_asset.save() # Simpan perubahan pada objek MediaAsset
+    # Di sini kita tidak perlu lagi mengatur primary_asset.edited_file.name
+    # karena kita akan menggunakan URL langsung dari ai_results di template.
 
-    schedule.save() # Simpan perubahan pada objek Schedule (untuk caption)
-    
-    return render(request, 'scheduler/ai_preview.html', {
+    return render(request, 'scheduler/schedule_confirmation.html', {
         'schedule': schedule,
-        # Template sekarang akan mengambil data yang sudah tersimpan dari objek 'schedule'
+        'ai_results': ai_results, # Kirim juga ai_results ke template
     })
 
+
 @login_required
-def confirm_ai_result(request, schedule_id):
+def process_confirmation(request, schedule_id):
     schedule = get_object_or_404(Schedule, id=schedule_id, user=request.user)
     
     if request.method == 'POST':
-        # Cek tombol mana yang ditekan pada form di template
-        if 'confirm' in request.POST:
-            # Jika pengguna konfirmasi, simpan caption dan lanjut
-            ai_caption = request.POST.get('ai_caption')
-            schedule.ai_generated_caption = ai_caption
-            schedule.save()
-            return redirect('scheduler:schedule_preview', schedule_id=schedule.id)
-        
-        elif 'cancel' in request.POST:
-            # Jika pengguna membatalkan, hapus jadwal dan kembali ke daftar
-            schedule.delete()
-            return redirect('scheduler:schedule_list')
-
-    return redirect('scheduler:ai_preview', schedule_id=schedule.id)
-
-@login_required
-def process_schedule(request, schedule_id):
-    schedule = get_object_or_404(Schedule, id=schedule_id, user=request.user)
-    if request.method == 'POST':
-        schedule.status = 'CONFIRMED'
-        schedule.save()
-        schedule_post_upload(schedule)
-        return redirect('scheduler:schedule_list')
-    return redirect('scheduler:schedule_preview', schedule_id=schedule.id)
+        try:
+            if 'confirm' in request.POST:
+                # Ambil hasil AI dari session
+                ai_results = request.session.get('ai_results', {})
+    
+                # Simpan caption final dan ubah status
+                final_caption = request.POST.get('final_caption', schedule.caption)
+                schedule.caption = final_caption
+                
+                # Simpan hasil AI secara permanen
+                if ai_results.get('ai_generated_caption'):
+                    schedule.ai_generated_caption = ai_results['ai_generated_caption']
+                
+                edited_media_path = ai_results.get('edited_media_url')
+                if edited_media_path:
+                    primary_asset = schedule.get_primary_media_asset()
+                    if primary_asset:
+                        primary_asset.edited_file.name = ai_results['edited_media_url'].split('/media/')[-1]
+                        primary_asset.save()
+    
+                schedule.status = 'CONFIRMED'
+                schedule.save()
+                schedule_post_upload(schedule) # Panggil service untuk mengirim ke API eksternal
+                return redirect('scheduler:schedule_list')
+            elif 'cancel' in request.POST:
+                schedule.delete()
+                return redirect('scheduler:schedule_list')
+        finally:
+            # Selalu hapus session setelah POST (baik confirm maupun cancel)
+            # Blok finally ini akan dieksekusi sebelum fungsi me-return redirect.
+            if 'ai_results' in request.session:
+                del request.session['ai_results']
+            
+    # Jika request bukan POST, arahkan kembali ke halaman konfirmasi.
+    return redirect('scheduler:schedule_confirmation', schedule_id=schedule.id)

@@ -1,3 +1,5 @@
+import io
+from PIL import Image
 import base64
 import openai
 from django.conf import settings
@@ -67,16 +69,26 @@ def ai_edit(payload: AIEditPayload) -> AIEditResponse:
     
     try: # request an Image Edit to openai
         logger.info(f"Proses: Melakukan permintaan AI Edit untuk {payload.media_file_path} ke OpenAI.")
-        # Model yang benar untuk editing adalah dall-e-2.
-        # Parameter 'image' mengharapkan objek file, bukan list.
-        with open(payload.media_file_path, "rb") as image_file:
-            result = client.images.edit(
-                model="dall-e-2", # Model yang dikoreksi
-                image=image_file, # Langsung berikan objek file
-                prompt=payload.prompt,
-                n=1,
-                response_format="b64_json" # Pastikan output dalam format base64
-            )
+        
+        # Gambar harus dikonversi ke RGBA untuk DALL-E 2 edit
+        img = Image.open(payload.media_file_path).convert("RGBA")
+        
+        # Simpan gambar RGBA ke stream byte di memori
+        byte_stream = io.BytesIO()
+        img.save(byte_stream, format="PNG")
+        byte_stream.seek(0) # Kembali ke awal stream untuk dibaca
+
+        # Berikan nama file dan data stream sebagai tuple untuk memastikan mimetype benar
+        # Format: (nama_file, file_data, mimetype)
+        image_data_tuple = ('image.png', byte_stream, 'image/png')
+
+        result = client.images.edit(
+            model="gpt-image-1", # Sesuai permintaan, model tidak diubah
+            image=image_data_tuple, # Berikan tuple yang berisi data lengkap
+            prompt=payload.prompt,
+            n=1,
+            quality='low'
+        )
         image_base64 = result.data[0].b64_json
         image_bytes = base64.b64decode(image_base64)
 
@@ -87,8 +99,9 @@ def ai_edit(payload: AIEditPayload) -> AIEditResponse:
         
         path_in_storage = default_storage.save(edited_filename, ContentFile(image_bytes))
         
-        logger.info(f"Berhasil menyimpan gambar hasil editan ke {default_storage.url(path_in_storage)}")
-        return AIEditResponse(edited_media_file_path=path_in_storage) # Kembalikan path relatif, bukan URL
+        edited_url = default_storage.url(path_in_storage)
+        logger.info(f"Berhasil menyimpan gambar hasil editan ke {edited_url}")
+        return AIEditResponse(edited_media_file_path=edited_url) # Kembalikan URL lengkap
     except Exception as e:
         logger.error(f"Terjadi error saat melakukan permintaan AI Edit ke OpenAI. Error: {e}")
         raise e

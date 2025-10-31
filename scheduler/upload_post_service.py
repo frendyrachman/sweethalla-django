@@ -2,6 +2,7 @@ from .models import Schedule
 import logging
 import requests
 from django.conf import settings
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ def schedule_post_upload(schedule: Schedule):
     """
     logger.info(f"Memulai permintaan Upload Post dengan API untuk Schedule ID: {schedule.id}")
     try:
-        BASE_URL = "https://api.upload-post.com/api/"
+        BASE_URL = "https://api.upload-post.com/api" # Hapus garis miring di akhir
         headers = {
             "Authorization": f"api_key {settings.UPLOAD_POST_API_KEY}"
         }
@@ -23,32 +24,32 @@ def schedule_post_upload(schedule: Schedule):
         else:
             platforms = [platforms]
 
+        # Perhitungan sederhana: Kurangi 7 jam dari waktu jadwal untuk mendapatkan UTC
+        # Asumsi waktu input adalah GMT+7
+        utc_scheduled_date = schedule.schedule_time - timedelta(hours=7)
+
         data_payload = {
             "user": 'karenbot',
             "platform[]": platforms,
-            "title": schedule.ai_generated_caption or schedule.caption, # Use AI caption if available
-            "scheduled_date": schedule.schedule_time.isoformat()
+            "title": schedule.caption, # Gunakan caption final yang sudah dikonfirmasi
+            "scheduled_date": utc_scheduled_date.isoformat(), # Kirim waktu yang sudah dikonversi ke UTC
+            "media_type": schedule.content_type
         }
 
         files_payload = []
         url = ""
 
-        if schedule.media_type == 'SINGLE_IMAGE':
-            logger.info("Memproses unggahan Jadwal Gambar Tunggal")
+        if schedule.media_type == 'IMAGE':
+            logger.info("Memproses unggahan Jadwal Gambar")
             url = f"{BASE_URL}/upload_photos"
-            asset = schedule.media_assets.first()
-            if asset and asset.file:
-                with asset.file.open('rb') as f:
-                    files_payload.append(('photos', (asset.file.name, f.read(), 'image/jpeg')))
-
-        elif schedule.media_type == 'CAROUSEL':
-            logger.info("Memproses unggahan Jadwal Carousel")
-            url = f"{BASE_URL}/upload_photos" # Asumsi endpoint yang sama
             assets = schedule.media_assets.all()
             for asset in assets:
-                if asset.file:
-                    with asset.file.open('rb') as f:
-                        files_payload.append(('photos', (asset.file.name, f.read(), 'image/jpeg')))
+                # Gunakan file yang sudah diedit jika ada, jika tidak, gunakan file asli
+                file_to_upload = asset.edited_file if asset.edited_file else asset.file
+                if file_to_upload:
+                    with file_to_upload.open('rb') as f:
+                        # Gunakan nama file asli untuk API
+                        files_payload.append(('photos[]', (asset.file.name, f.read(), 'image/jpeg')))
 
         elif schedule.media_type == 'VIDEO':
             logger.info("Memproses unggahan Jadwal Video")

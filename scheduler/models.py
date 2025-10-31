@@ -4,21 +4,18 @@ import os
 
 class Schedule(models.Model):
     PLATFORM_CHOICES = [
-        ('IG', 'Instagram'),
-        ('TIKTOK', 'TikTok'),
+        ('instagram', 'Instagram'),
+        ('tiktok', 'TikTok'),
         ('BOTH', 'Both'),
     ]
     MEDIA_TYPE_CHOICES = [
-        ('SINGLE_IMAGE', 'Single Image'),
-        ('CAROUSEL', 'Carousel'),
-        ('VIDEO', 'Video'),
+        ('IMAGE', 'Image(s)'),
+        ('VIDEO', 'Video')
     ]
     CONTENT_TYPE_CHOICES = [
-        ('REELS', 'Reels'),
         ('STORIES', 'Stories'),
-        ('SINGLE_POST', 'Single Post'),
-        ('CAROUSEL_POST', 'Carousel Post'), # Menggunakan nama yang berbeda dari media_type
-        ('TIKTOK_VIDEO', 'TikTok Video'), # Menggunakan nama yang berbeda dari media_type
+        ('REELS', 'Reels'),
+        ('FEEDS', 'Feeds'), # Menggantikan 'IMAGES' untuk post gambar (single/carousel)
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

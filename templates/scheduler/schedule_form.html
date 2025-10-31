@@ -11,7 +11,7 @@
 
         <!-- Render fields manually for better control -->
         {% for field in form %}
-            {% if field.name != 'ai_edit_prompt' and field.name != 'final_caption' and field.name != 'media_files' %} {# Sembunyikan field yang dikontrol JS #}
+            {% if field.name != 'ai_edit_prompt' and field.name != 'caption' and field.name != 'media_files' %} {# Sembunyikan field yang dikontrol JS #}
                 <div id="div_{{ field.auto_id }}" class="field-wrapper">
                     <label for="{{ field.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>
                     
@@ -61,8 +61,8 @@
 
         <!-- Manual Caption (ditempatkan di sini untuk dikontrol JS) -->
         <div id="div_id_caption" style="display: none;">
-            <label for="{{ form.final_caption.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ form.final_caption.label }}</label>
-            {% render_field form.final_caption class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Tulis caption Anda di sini..." %}
+            <label for="{{ form.caption.auto_id }}" class="block text-sm font-medium text-gray-700 mb-1">{{ form.caption.label }}</label>
+            {% render_field form.caption class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Tulis caption Anda di sini..." %}
         </div>
 
         <div>
@@ -84,15 +84,13 @@
 
         // Opsi untuk setiap Media Type
         const contentTypeOptions = {
-            'image': [
+            'IMAGE': [ // Sesuai dengan nilai dari model
                 { value: 'STORIES', text: 'Stories' },
-                { value: 'SINGLE_POST', text: 'Single Post' },
-                { value: 'CAROUSEL_POST', text: 'Carousel Post' }
+                { value: 'FEEDS', text: 'Feeds' }
             ],
-            'video': [
+            'VIDEO': [ // Sesuai dengan nilai dari model
                 { value: 'STORIES', text: 'Stories' },
-                { value: 'REELS', text: 'Reels' },
-                { value: 'TIKTOK_VIDEO', text: 'TikTok Video' }
+                { value: 'REELS', text: 'Reels' }
             ]
         };
 
@@ -100,10 +98,10 @@
             const mediaType = mediaTypeField.value;
             let optionsToShow = [];
 
-            if (mediaType === 'SINGLE_IMAGE' || mediaType === 'CAROUSEL') {
-                optionsToShow = contentTypeOptions.image;
+            if (mediaType === 'IMAGE') {
+                optionsToShow = contentTypeOptions.IMAGE;
             } else if (mediaType === 'VIDEO') {
-                optionsToShow = contentTypeOptions.video;
+                optionsToShow = contentTypeOptions.VIDEO;
             }
 
             // Hapus opsi lama
@@ -124,13 +122,11 @@
         function updateFileInput() {
             const mediaType = mediaTypeField.value;
 
-            if (mediaType === 'SINGLE_IMAGE') {
-                mediaFilesInput.removeAttribute('multiple');
-                mediaFilesInput.setAttribute('accept', 'image/*');
-            } else if (mediaType === 'CAROUSEL') {
+            if (mediaType === 'IMAGE' || mediaType === 'VIDEO') {
+                // Untuk 'IMAGE', kita izinkan multiple untuk carousel. Validasi akan ditangani di backend.
                 mediaFilesInput.setAttribute('multiple', 'true');
                 mediaFilesInput.setAttribute('accept', 'image/*');
-            } else if (mediaType === 'VIDEO') {
+            } else if (mediaType === 'VIDEO') { // Ini bisa disederhanakan, tapi kita biarkan untuk kejelasan
                 mediaFilesInput.removeAttribute('multiple');
                 mediaFilesInput.setAttribute('accept', 'video/*');
             } else {

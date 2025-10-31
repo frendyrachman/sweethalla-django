@@ -14,9 +14,8 @@ urlpatterns = [
     path('app/', views.home, name='home'), # Titik masuk setelah login
     path('app/list/', views.schedule_list, name='schedule_list'),
     path('app/create/', views.create_schedule, name='create_schedule'),
-    path('app/preview/<int:schedule_id>/', views.schedule_preview, name='schedule_preview'),
-    path('app/ai-preview/<int:schedule_id>/', views.ai_preview, name='ai_preview'),
-    path('app/confirm-ai/<int:schedule_id>/', views.confirm_ai_result, name='confirm_ai_result'),
-    path('app/process/<int:schedule_id>/', views.process_schedule, name='process_schedule'),
+    path('app/confirmation/<int:schedule_id>/', views.schedule_confirmation, name='schedule_confirmation'),
+    path('app/run-ai/<int:schedule_id>/', views.run_ai_and_confirm, name='run_ai_and_confirm'),
+    path('app/process-confirmation/<int:schedule_id>/', views.process_confirmation, name='process_confirmation'),
     path('app/delete/<int:schedule_id>/', views.delete_schedule, name='delete_schedule'),
 ]
