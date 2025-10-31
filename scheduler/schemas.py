@@ -24,3 +24,14 @@ class AICaptionPayload(BaseModel):
 
 class AICaptionResponse(BaseModel):
     caption: str
+    
+class edit_schedule_payload(BaseModel):
+    job_id: str
+    scheduled_date: Optional[datetime] = None
+    caption: Optional[str] = None
+
+class edit_schedule_response(BaseModel):
+    success: bool
+    job_id: str
+    scheduled_date: datetime
+    caption: str

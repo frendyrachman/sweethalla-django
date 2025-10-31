@@ -129,3 +129,5 @@ cython_debug/
 
 # VS Code
 .vscode/
+
+*.ipynb

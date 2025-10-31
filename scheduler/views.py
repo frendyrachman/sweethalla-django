@@ -4,8 +4,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from .forms import ScheduleForm
 from .models import Schedule, MediaAsset
+from django.utils import timezone
 from .ai_service import run_ai_tasks_for_schedule
-from .upload_post_service import schedule_post_upload
+from .upload_post_service import schedule_post_upload, delete_upload_schedule, get_schedule
 
 # Authentication Views
 def login_view(request):
@@ -59,6 +60,28 @@ def create_schedule(request):
 
 @login_required
 def schedule_list(request):
+    # Langkah 1: Hapus jadwal lokal yang sudah lewat tanggalnya
+    now = timezone.now()
+    past_schedules = Schedule.objects.filter(user=request.user, schedule_time__lt=now)
+    if past_schedules.exists():
+        past_schedules.delete()
+
+    # Langkah 2 (Baru): Sinkronisasi dengan data dari API eksternal
+    # Ambil daftar jadwal dari API upload-post
+    remote_schedules_data = get_schedule() # Memanggil fungsi baru Anda
+    if remote_schedules_data:
+        # Dapatkan daftar semua job_id yang ada di API eksternal
+        remote_job_ids = {item.get('job_id') for item in remote_schedules_data if item.get('job_id')}
+        
+        # Dapatkan semua jadwal lokal yang memiliki job_id
+        local_schedules_with_jobs = Schedule.objects.filter(user=request.user).exclude(upload_job_id__isnull=True).exclude(upload_job_id__exact='')
+        
+        # Hapus jadwal lokal yang job_id-nya tidak lagi ditemukan di API eksternal
+        schedules_to_delete = local_schedules_with_jobs.exclude(upload_job_id__in=remote_job_ids)
+        if schedules_to_delete.exists():
+            schedules_to_delete.delete()
+
+    # Langkah 3: Ambil daftar jadwal final dari database lokal untuk ditampilkan
     schedules = Schedule.objects.filter(user=request.user).order_by('-schedule_time')
     return render(request, 'scheduler/schedule_list.html', {'schedules': schedules})
 
@@ -66,6 +89,11 @@ def schedule_list(request):
 def delete_schedule(request, schedule_id):
     schedule = get_object_or_404(Schedule, id=schedule_id, user=request.user)
     if request.method == 'POST':
+        # Jika jadwal ini memiliki job_id dari API, panggil service untuk menghapusnya di sana dulu
+        if schedule.upload_job_id:
+            delete_upload_schedule(schedule.upload_job_id) # Memanggil fungsi baru Anda
+        
+        # Hapus jadwal dari database lokal
         schedule.delete()
         return redirect('scheduler:schedule_list')
     return redirect('scheduler:schedule_list')

@@ -1,12 +1,14 @@
-from .models import Schedule
 import logging
 import requests
 from django.conf import settings
 from datetime import timedelta
+from .schemas import edit_schedule_payload, edit_schedule_response
+
+
 
 logger = logging.getLogger(__name__)
 
-def schedule_post_upload(schedule: Schedule):
+def schedule_post_upload(schedule):
     """
     Schedules a post upload by calling an external API.
     It handles single image, carousel, and video posts.
@@ -86,3 +88,75 @@ def schedule_post_upload(schedule: Schedule):
         # It's better not to raise the exception up to the view unless the view can handle it.
         # Returning None is often safer.
         return None
+
+def get_schedule():
+    """
+    Mengambil jadwal upload yang sudah terkirim ke Upload Post
+    """
+    logger.info("Mengambil Seluruh jadwal di Upload Post")
+    try:
+        url = "https://api.upload-post.com/api/uploadposts/schedule"
+        headers = {
+            "Authorization": f"Apikey {settings.UPLOAD_POST_API_KEY}"
+        }
+        response = requests.get(url=url, headers=headers)
+        schedule_list = []
+        if response.status_code == 200:
+            logger.info(f"Berhasil mengambil daftar jadwal")
+            schedule_list.append(response.json())
+            return schedule_list
+        else:
+            logger.error(f"Terjadi error saat mengambil data jadwal di Upload Post. Error Code: {response.status_code}. Error Message: {response.text}")
+            return None
+    except requests.exceptions.RequestException as e:
+        return {
+            "success": False,
+            "error": "Gagal terhubung ke UploadPost API.",
+            "detail": str(e)
+        }
+
+def delete_upload_schedule(job_id):
+    """
+    Mengirimkan permintaan hapus atau cancel jadwal ke UploadPost
+    """
+    logger.info(f"Mengirim permintaan cancel upload schedule.")
+    try:
+        BASE_URL = "https://api.upload-post.com/api/schedule/" # Hapus garis miring di akhir
+        headers = {
+            "Authorization": f"api_key {settings.UPLOAD_POST_API_KEY}"
+        }
+        response = requests.delete(f"{BASE_URL}{job_id}", headers=headers)
+        if response.status_code in [200, 202]:
+            logger.info(f"Berhasil mengirim permintaan cancel ke Upload Post API untuk Jadwal {job_id}.")
+            return response.json()
+        else:
+            logger.error(f"Error Response from upload post API. Error: {response.json}")
+            return 
+    except Exception as e:
+        logger.error("Error Requesting delete schedule.")
+        
+def edit_schedule(payload: edit_schedule_payload) -> edit_schedule_response:
+    """
+    Mengirim permintaan edit schedule (method patch)
+    """
+    logger.info(f"Mengirim permintaan edit schedule.")
+    try:
+        url = f"https://api.upload-post.com/api/schedule/{payload.job_id}"
+        headers = {
+            "Authorization": f"api_key {settings.UPLOAD_POST_API_KEY}"
+        }
+        response = requests.patch(
+            url,
+            headers=headers,
+            json={
+                "scheduled_date": payload.scheduled_date,
+                "caption": payload.caption
+            }
+        )
+        if response.status_code == 200 :
+            logger.info(f"Berhasil melakukan edit. Job ID: {payload.job_id}. Caption: {payload.caption}. Upload Schedule: {payload.scheduled_date}")
+            return response
+        else:
+            logger.error(f"Terjadi error saat mengirim permintaan edit ke Upload Post.")
+    except Exception as e:
+        logger.error("Error Requesting delete schedule.")
