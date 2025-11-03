@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=sweethala_db
+      - POSTGRES_USER=sweethala_user
+      - POSTGRES_PASSWORD=sweethala_password
+    networks:
+      - sweethala_net
+
+  redis:
+    image: redis:6.2-alpine
+    networks:
+      - sweethala_net
+
+  web:
+    build: .
+    command: gunicorn internal_scheduler.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    networks:
+      - sweethala_net
+
+  celery:
+    build: .
+    command: celery -A internal_scheduler worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+    networks:
+      - sweethala_net
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  sweethala_net:
+    driver: bridge

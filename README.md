@@ -44,17 +44,121 @@ SweetHala adalah aplikasi web canggih yang dirancang untuk mengotomatiskan dan m
 
 ---
 
-## Pengaturan dan Instalasi Lokal
+## Pengaturan dan Instalasi
 
-Ikuti langkah-langkah berikut untuk menjalankan proyek ini di lingkungan lokal Anda.
+Ada dua cara untuk menjalankan proyek ini: menggunakan Docker (direkomendasikan untuk kemudahan) atau secara manual.
 
-### 1. Prasyarat
+### Menjalankan dengan Docker (Rekomendasi)
 
-- Python 3.8+
-- Git
-- Redis (terinstal dan berjalan di sistem Anda)
+Metode ini akan menyiapkan semua yang Anda butuhkan: server web, database PostgreSQL, Redis, dan Celery worker.
 
-### 2. Clone Repository
+**Prasyarat:**
+- Docker
+- Docker Compose
+
+**Langkah-langkah:**
+
+1.  **Clone Repository**
+    ```bash
+    git clone https://github.com/your-username/sweethala.git
+    cd sweethala
+    ```
+
+2.  **Konfigurasi Environment Variables**
+    Buat file `.env` di direktori root proyek dan isi dengan variabel yang diperlukan. Gunakan `DATABASE_URL` untuk PostgreSQL yang akan dijalankan oleh Docker.
+
+    ```ini
+    # Contoh isi file .env
+    SECRET_KEY='ganti-dengan-secret-key-django-anda'
+    DEBUG=True
+    ALLOWED_HOSTS=localhost,127.0.0.1,web
+    OPENAI_API_KEY='your-openai-api-key'
+    UPLOAD_POST_API_KEY='your-upload-post-api-key'
+    DATABASE_URL='postgres://sweethala_user:sweethala_password@db:5432/sweethala_db'
+    CELERY_BROKER_URL='redis://redis:6379/0'
+    CELERY_RESULT_BACKEND='redis://redis:6379/0'
+    ```
+
+3.  **Build dan Jalankan Container**
+    ```bash
+    docker-compose up --build
+    ```
+    Perintah ini akan membangun image, mengunduh image yang diperlukan (Postgres, Redis), dan menjalankan semua layanan.
+
+4.  **Buat Superuser (Opsional)**
+    Buka terminal baru dan jalankan perintah berikut untuk membuat akun admin:
+    ```bash
+    docker-compose exec web python manage.py createsuperuser
+    ```
+
+5.  **Akses Aplikasi**
+    Buka browser Anda dan akses `http://127.0.0.1:8000`.
+
+### Menjalankan Secara Manual (Lokal)
+
+**Prasyarat:**
+- Python 3.9+
+- PostgreSQL
+- Redis
+
+1.  **Clone Repository**
+    ```bash
+    git clone https://github.com/your-username/sweethala.git
+    cd sweethala
+    ```
+
+2.  **Buat dan Aktifkan Virtual Environment**
+    ```bash
+    # Windows
+    python -m venv venv
+    .\venv\Scripts\activate
+
+    # macOS / Linux
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Instal Dependensi**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Konfigurasi Environment Variables**
+    Buat file `.env` dan isi sesuai dengan konfigurasi lokal Anda.
+
+    ```ini
+    # Contoh isi file .env untuk lokal
+    SECRET_KEY='ganti-dengan-secret-key-django-anda'
+    DEBUG=True
+    ALLOWED_HOSTS=localhost,127.0.0.1
+    OPENAI_API_KEY='your-openai-api-key'
+    UPLOAD_POST_API_KEY='your-upload-post-api-key'
+    DATABASE_URL='postgres://user:password@localhost:5432/your_db_name'
+    CELERY_BROKER_URL='redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
+    ```
+
+5.  **Jalankan Migrasi dan Buat Superuser**
+    ```bash
+    python manage.py migrate
+    python manage.py createsuperuser
+    ```
+
+6.  **Jalankan Layanan**
+    Anda perlu menjalankan server Django, Celery worker, dan Redis di terminal terpisah.
+
+    *   **Terminal 1 (Redis):** Pastikan server Redis Anda berjalan.
+    *   **Terminal 2 (Celery):**
+        ```bash
+        celery -A internal_scheduler worker -l info
+        ```
+    *   **Terminal 3 (Django):**
+        ```bash
+        python manage.py runserver
+        ```
+
+7.  **Akses Aplikasi**
+    Buka browser Anda dan akses `http://127.0.0.1:8000`.
 
 ```bash
 git clone https://github.com/your-username/sweethala.git
