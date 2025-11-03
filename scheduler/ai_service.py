@@ -18,43 +18,58 @@ openai_api_key = settings.OPENAI_API_KEY
 def run_ai_tasks_for_schedule(schedule):
     """
     Orchestrates AI tasks based on the schedule's needs.
-    Currently focuses on caption generation.
+    If both edit and caption are needed, it edits first, then captions the edited image.
     """
-    ai_generated_caption = None # Untuk menyimpan caption yang dihasilkan AI
-    edited_media_url = None     # Untuk menyimpan URL media yang diedit AI
-    
-    # Prioritaskan AI Caption
-    if schedule.needs_ai_caption:
-        logger.info(f"Memulai tugas AI Caption untuk Jadwal ID: {schedule.id}")
-        # Untuk captioning, kita biasanya menggunakan gambar asli
-        first_asset = schedule.media_assets.first()
-        if first_asset and first_asset.file:
-            try:
-                payload = AICaptionPayload(media_file_path=first_asset.file.path)
-                response = ai_caption(payload)
-                ai_generated_caption = response.caption
-                logger.info(f"Caption AI berhasil dihasilkan untuk Jadwal ID: {schedule.id}")
-            except Exception as e:
-                logger.error(f"Gagal menjalankan AI Caption untuk Jadwal ID: {schedule.id}. Error: {e}")
-                ai_generated_caption = "Error: Gagal menghasilkan caption."
-    
-    # Implementasikan logika untuk ai_edit jika diperlukan.
+    ai_generated_caption = None
+    edited_media_url = None
+    image_path_for_captioning = None # Path gambar yang akan digunakan untuk caption
+
+    first_asset = schedule.media_assets.first()
+    if not first_asset or not first_asset.file:
+        logger.warning(f"Tidak ada media asset ditemukan untuk Jadwal ID: {schedule.id}. Membatalkan tugas AI.")
+        return {'ai_generated_caption': None, 'edited_media_url': None}
+
+    # Langkah 1: Jalankan AI Edit jika diperlukan
     if schedule.needs_ai_edit:
         logger.info(f"Memulai tugas AI Edit untuk Jadwal ID: {schedule.id}")
-        first_asset = schedule.media_assets.first()
-        if first_asset and first_asset.file and schedule.ai_edit_prompt:
+        if schedule.ai_edit_prompt:
             try:
                 payload = AIEditPayload(
                     media_file_path=first_asset.file.path,
                     prompt=schedule.ai_edit_prompt
                 )
                 response = ai_edit(payload)
-                edited_media_url = response.edited_media_file_path # Ini adalah URL ke file yang diedit
+                edited_media_url = response.edited_media_file_path
+                
+                # Dapatkan path file absolut dari URL media untuk digunakan oleh AI Caption
+                # Ini mengasumsikan MEDIA_ROOT terkonfigurasi dengan benar
+                relative_path = edited_media_url.replace(settings.MEDIA_URL, '')
+                image_path_for_captioning = os.path.join(settings.MEDIA_ROOT, relative_path)
+
                 logger.info(f"Gambar AI berhasil diedit untuk Jadwal ID: {schedule.id}. URL: {edited_media_url}")
             except Exception as e:
                 logger.error(f"Gagal menjalankan AI Edit untuk Jadwal ID: {schedule.id}. Error: {e}")
-                # Tangani error, mungkin set edited_media_url ke original atau None
+                # Jika edit gagal, kita tetap gunakan gambar asli untuk caption
+                image_path_for_captioning = first_asset.file.path
+        else:
+            # Jika needs_ai_edit dicentang tapi prompt kosong, gunakan gambar asli
+            image_path_for_captioning = first_asset.file.path
+    else:
+        # Jika tidak ada AI edit, gunakan gambar asli untuk caption
+        image_path_for_captioning = first_asset.file.path
 
+    # Langkah 2: Jalankan AI Caption jika diperlukan, menggunakan gambar yang sesuai
+    if schedule.needs_ai_caption and image_path_for_captioning:
+        logger.info(f"Memulai tugas AI Caption untuk Jadwal ID: {schedule.id} menggunakan gambar: {image_path_for_captioning}")
+        try:
+            payload = AICaptionPayload(media_file_path=image_path_for_captioning)
+            response = ai_caption(payload)
+            ai_generated_caption = response.caption
+            logger.info(f"Caption AI berhasil dihasilkan untuk Jadwal ID: {schedule.id}")
+        except Exception as e:
+            logger.error(f"Gagal menjalankan AI Caption untuk Jadwal ID: {schedule.id}. Error: {e}")
+            ai_generated_caption = "Error: Gagal menghasilkan caption."
+    
     return {
         'ai_generated_caption': ai_generated_caption,
         'edited_media_url': edited_media_url

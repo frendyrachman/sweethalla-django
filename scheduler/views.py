@@ -61,7 +61,8 @@ def create_schedule(request):
 @login_required
 def schedule_list(request):
     # Langkah 1: Hapus jadwal lokal yang sudah lewat tanggalnya
-    now = timezone.now()
+    # now = timezone.now()
+    now = timezone.now() + timezone.timedelta(days=1)
     past_schedules = Schedule.objects.filter(user=request.user, schedule_time__lt=now)
     if past_schedules.exists():
         past_schedules.delete()
